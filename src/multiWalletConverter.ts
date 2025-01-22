@@ -8,29 +8,28 @@ import { Store } from "@hyperledger/aries-askar-nodejs"
 export class MultiWalletConverter {
   private walletConfig: WalletConfig
   private fileSystem: FileSystem
-  private profileId: string // tenantId
-  private profileKey: string // tenantKey
+  // profileId example "tenant-3064f113-1e00-4171-945b-4987c81decde"
+  // tenantId example "3064f113-1e00-4171-945b-4987c81decde"
+  private profileId: string
 
-  constructor({
+  public constructor({
     walletConfig,
     fileSystem,
-    profileId,
-    profileKey,
+    tenantId,
   }: {
     walletConfig: WalletConfig
     fileSystem: FileSystem
-    profileId: string
-    profileKey: string
+    tenantId: string
   }) {
     this.walletConfig = walletConfig
     this.fileSystem = fileSystem
-    this.profileId = profileId
-    this.profileKey = profileKey
+
+    // profileId example "tenant-3064f113-1e00-4171-945b-4987c81decde"
+    // tenantId example "3064f113-1e00-4171-945b-4987c81decde"
+    this.profileId = "tenant-" + tenantId
   }
 
-  async getWalletRecords() {}
-
-  async convertSingleWalletToMultiWallet() {
+  public async run() {
     try {
       const askarWalletConfig = await this.getAskarWalletConfig(
         this.walletConfig
@@ -53,6 +52,7 @@ export class MultiWalletConverter {
 
       const data = await scan.fetchAll()
 
+      // Find the tenant record by name
       const tenantRecord = data.find(
         (rec) => rec.name === this.profileId.split("tenant-")[1]
       )
@@ -61,6 +61,11 @@ export class MultiWalletConverter {
         "🚀 ~ MultiWalletConverter ~ convertSingleWalletToMultiWallet ~ data:",
         tenantRecord
       )
+
+      // @ts-ignore - We are picking the key from the tenant record
+      const tenantWalletKey = JSON.parse(tenantRecord?.value)["config"][
+        "walletConfig"
+      ]["key"]
 
       const tenantStore = await Store.open({
         uri: askarWalletConfig.uri,
@@ -82,14 +87,16 @@ export class MultiWalletConverter {
 
       const newTenantWalletConfig = await this.getAskarWalletConfig({
         id: this.profileId,
-        key: this.profileKey,
-        // keyDerivationMethod: KeyDerivationMethod.Argon2IMod,
+        key: tenantWalletKey,
+        storage: this.walletConfig.storage,
+        // tenant uses raw key derivation method if we want to change the key we need to change using rekey
+        // https://github.com/openwallet-foundation/credo-ts/blob/main/packages/tenants/src/services/TenantRecordService.ts#L31
+        keyDerivationMethod: KeyDerivationMethod.Raw,
       })
 
       if (newTenantWalletConfig.path) {
         await this.fileSystem.createDirectory(newTenantWalletConfig.path)
       }
-      console.log("check 1")
 
       await tenantStore.copyTo({
         recreate: false,
@@ -97,36 +104,29 @@ export class MultiWalletConverter {
         keyMethod: newTenantWalletConfig.keyMethod,
         passKey: newTenantWalletConfig.passKey,
       })
-      console.log("check 2")
-
-      await tenantStore.close()
-      console.log("check 3")
 
       const newTenantStore = await Store.open({
         uri: newTenantWalletConfig.uri,
         keyMethod: newTenantWalletConfig.keyMethod,
         passKey: newTenantWalletConfig.passKey,
-        profile: this.profileId,
       })
 
       const newProfiles = await newTenantStore.listProfiles()
 
       await newTenantStore.setDefaultProfile(this.profileId)
-      console.log(
-        "🚀 ~ MultiWalletConverter ~ convertSingleWalletToMultiWallet ~ newProfiles:",
-        newProfiles
-      )
 
       for await (const profile of newProfiles) {
         if (profile !== this.profileId) {
           await newTenantStore.removeProfile(profile)
         }
       }
+
       await newTenantStore.close()
-      console.log("check 4")
+      await tenantStore.close()
+      await adminStore.close()
     } catch (error) {
-      console.log(
-        "🚀 ~ MultiWalletConverter ~ convertSingleWalletToMultiWallet ~ error:",
+      console.error(
+        "MultiWalletConverter ~ convertSingleWalletToMultiWallet ~ error:",
         error
       )
     }
@@ -142,6 +142,7 @@ export class MultiWalletConverter {
         passKey: askarWalletConfig.passKey,
       })
 
+      // @ts-ignore - We can have category as optional in the scan method
       const tenantScan = store.scan({})
       const tenantData = await tenantScan.fetchAll()
       console.log(

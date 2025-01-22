@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "export": "tsx src/index.ts"
+    "cli": "tsx src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +17,7 @@
     "@credo-ts/askar": "^0.5.13",
     "@credo-ts/core": "^0.5.13",
     "@credo-ts/node": "^0.5.13",
-    "@hyperledger/aries-askar-nodejs": "^0.2.3"
+    "@hyperledger/aries-askar-nodejs": "^0.2.3",
+    "commander": "^13.1.0"
   }
 }
