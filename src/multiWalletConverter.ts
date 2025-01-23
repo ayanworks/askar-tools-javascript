@@ -8,8 +8,6 @@ import { Store } from "@hyperledger/aries-askar-nodejs"
 export class MultiWalletConverter {
   private walletConfig: WalletConfig
   private fileSystem: FileSystem
-  // profileId example "tenant-3064f113-1e00-4171-945b-4987c81decde"
-  // tenantId example "3064f113-1e00-4171-945b-4987c81decde"
   private profileId: string
 
   public constructor({
@@ -23,14 +21,12 @@ export class MultiWalletConverter {
   }) {
     this.walletConfig = walletConfig
     this.fileSystem = fileSystem
-
-    // profileId example "tenant-3064f113-1e00-4171-945b-4987c81decde"
-    // tenantId example "3064f113-1e00-4171-945b-4987c81decde"
     this.profileId = "tenant-" + tenantId
   }
 
   public async run() {
     try {
+      console.log("🚀 ~ MultiWalletConverter ~ run ~ this.walletConfig:", this.walletConfig)
       const askarWalletConfig = await this.getAskarWalletConfig(
         this.walletConfig
       )
@@ -74,12 +70,12 @@ export class MultiWalletConverter {
         profile: this.profileId,
       })
 
-      // const tenantScan = tenantStore.scan({})
-      // const tenantData = await tenantScan.fetchAll()
-      // console.log(
-      //   "🚀 ~ MultiWalletConverter ~ convertSingleWalletToMultiWallet ~ data:",
-      //   tenantData
-      // )
+      const tenantScan = tenantStore.scan({})
+      const tenantData = await tenantScan.fetchAll()
+      console.log(
+        "🚀 ~ MultiWalletConverter ~ convertSingleWalletToMultiWallet ~ data:",
+        tenantData
+      )
 
       if (!tenantStore) {
         throw new Error("Tenant Store not found")
@@ -120,6 +116,8 @@ export class MultiWalletConverter {
           await newTenantStore.removeProfile(profile)
         }
       }
+     await  newTenantStore.rekey({ passKey: newTenantWalletConfig.passKey,
+        keyMethod: keyDerivationMethodToStoreKeyMethod(KeyDerivationMethod.Argon2IMod)})
 
       await newTenantStore.close()
       await tenantStore.close()
