@@ -4,6 +4,7 @@ import { AskarWalletPostgresStorageConfig } from "@credo-ts/askar"
 import { Command } from "commander"
 import { MultiWalletConverter } from "./multiWalletConverter"
 import { AskarWalletSqliteStorageConfig } from "@credo-ts/askar/build/wallet"
+import { Exporter } from "./exporter"
 
 const program = new Command("askar-tools-javascript")
 
@@ -12,7 +13,7 @@ program
     "--strategy <strategy>",
     "Specify strategy to be used. Choose from 'mt-convert-to-mw', or 'import-tenant'.",
     (value) => {
-      if (!["mt-convert-to-mw", "import-tenant"].includes(value)) {
+      if (!["mt-convert-to-mw", "import-tenant","export"].includes(value)) {
         throw new Error(
           "Invalid strategy. Choose from 'mt-convert-to-mw', or 'import-tenant'."
         )
@@ -55,10 +56,41 @@ const main = async () => {
   console.log("🚀 ~ main ~ options:", options)
 
   let method
+  let exporterMethod
 
   switch (options.strategy) {
     case "export":
-      throw new Error("Not implemented")
+      let storageType:
+        | AskarWalletPostgresStorageConfig
+        | AskarWalletSqliteStorageConfig
+
+      if (options.storageType === "postgres") {
+        storageType = {
+          type: "postgres",
+          config: {
+            host: options.postgresHost,
+          },
+          credentials: {
+            account: options.postgresUsername,
+            password: options.postgresPassword,
+          },
+        }
+      } else {
+        storageType = {
+          type: "sqlite",
+        }
+      }
+
+      exporterMethod = new Exporter({
+        fileSystem: new agentDependencies.FileSystem(),
+        walletConfig: {
+          id: options.walletId,
+          key: options.walletKey,
+          storage: storageType,
+        },
+        tenantId: options.tenantId,
+      })
+      await exporterMethod.export()
       break
 
     case "mt-convert-to-mw":
@@ -92,6 +124,7 @@ const main = async () => {
         },
         tenantId: options.tenantId,
       })
+      await method.run()
       break
 
     case "tenant-import":
@@ -101,8 +134,6 @@ const main = async () => {
     default:
       throw new Error("Invalid strategy")
   }
-
-  await method.run()
 }
 
 program.action(() => {
