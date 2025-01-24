@@ -22,7 +22,7 @@ Perform various operations on wallets using the askar-tools-javascript command.
 
 Export a tenant wallet to a JSON file:
 ```bash
-node src/index.js --strategy export \
+pnpm cli --strategy export \
     --wallet-id <wallet-id> \
     --wallet-key <wallet-key> \
     --storage-type <sqlite|postgres> \
@@ -36,7 +36,7 @@ node src/index.js --strategy export \
 
 Convert profiles in a sub-wallet to individual wallets:
 ```bash
-node src/index.js --strategy mt-convert-to-mw \
+pnpm cli  --strategy mt-convert-to-mw \
     --wallet-id <wallet-id> \
     --wallet-key <wallet-key> \
     --storage-type <sqlite|postgres> \
@@ -48,7 +48,7 @@ node src/index.js --strategy mt-convert-to-mw \
 
 ## Command Options
 
-- `--strategy <strategy>`: Choose from `mt-convert-to-mw`, `import-tenant`, or `export`.
+- `--strategy <strategy>`: Choose from `mt-convert-to-mw`, or `export`.
 - `--storage-type <type>`: Choose from `sqlite` or `postgres`.
 - `--wallet-id <walletName>`: Specify the wallet ID.
 - `--wallet-key <walletKey>`: Specify the wallet key.
