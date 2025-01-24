@@ -21,17 +21,29 @@ Perform various operations on wallets using the askar-tools-javascript command.
 ### Export Wallet
 
 Export a tenant wallet to a JSON file:
-
 ```bash
-node src/index.js --strategy export --wallet-id <wallet-id> --wallet-key <wallet-key> --storage-type <sqlite|postgres> [--postgres-host <host>] [--postgres-username <username>] [--postgres-password <password>] --tenant-id <tenant-id>
+node src/index.js --strategy export \
+    --wallet-id <wallet-id> \
+    --wallet-key <wallet-key> \
+    --storage-type <sqlite|postgres> \
+    [--postgres-host <host>] \
+    [--postgres-username <username>] \
+    [--postgres-password <password>] \
+    --tenant-id <tenant-id>
 ```
 
 ### Convert Single Wallet to Multi-Wallet
 
 Convert profiles in a sub-wallet to individual wallets:
-
 ```bash
-node src/index.js --strategy mt-convert-to-mw --wallet-id <wallet-id> --wallet-key <wallet-key> --storage-type <sqlite|postgres> [--postgres-host <host>] [--postgres-username <username>] [--postgres-password <password>] --tenant-id <tenant-id>
+node src/index.js --strategy mt-convert-to-mw \
+    --wallet-id <wallet-id> \
+    --wallet-key <wallet-key> \
+    --storage-type <sqlite|postgres> \
+    [--postgres-host <host>] \
+    [--postgres-username <username>] \
+    [--postgres-password <password>] \
+    --tenant-id <tenant-id>
 ```
 
 ## Command Options
