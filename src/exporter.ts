@@ -78,7 +78,7 @@ export class Exporter {
     }
 
     // Write filtered data to a JSON file
-    const outputPath = join(__dirname, "../exportedTenantWallet.json")
+    const outputPath = join(__dirname, "../exportedWallet.json")
     writeFileSync(outputPath, JSON.stringify(filteredData, null, 2))
     console.log(`Filtered data written to ${outputPath}`)
   }
