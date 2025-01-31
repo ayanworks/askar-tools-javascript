@@ -5,9 +5,13 @@ import { Command } from "commander"
 import { MultiWalletConverter } from "./multiWalletConverter"
 import { AskarWalletSqliteStorageConfig } from "@credo-ts/askar/build/wallet"
 import { Exporter } from "./exporter"
-import DBPerWalletExporter from "./db-pw-exporter"
 
 const program = new Command("askar-tools-javascript")
+
+export enum Strategy {
+  EXPORT = 'export',
+  DB_PW_EXPORT = 'db-pw-export'
+}
 
 program
   .requiredOption(
@@ -88,7 +92,7 @@ const main = async () => {
         },
         tenantId: options.tenantId,
       })
-      await exporterMethod.export()
+      await exporterMethod.export(Strategy.EXPORT)
       break
     case "db-pw-export":
         if (options.storageType === "postgres") {
@@ -108,7 +112,7 @@ const main = async () => {
           }
         }
   
-        exporterMethod = new DBPerWalletExporter({
+        exporterMethod = new Exporter({
           fileSystem: new agentDependencies.FileSystem(),
           walletConfig: {
             id: options.walletId,
@@ -117,7 +121,7 @@ const main = async () => {
           },
           tenantId: options.tenantId,
         })
-        await exporterMethod.exportDBPerWalletData()
+        await exporterMethod.export(Strategy.DB_PW_EXPORT)
         break
     case "mt-convert-to-mw":
       let storage:
