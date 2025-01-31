@@ -5,6 +5,7 @@ import { Command } from "commander"
 import { MultiWalletConverter } from "./multiWalletConverter"
 import { AskarWalletSqliteStorageConfig } from "@credo-ts/askar/build/wallet"
 import { Exporter } from "./exporter"
+import DBPerWalletExporter from "./db-pw-exporter"
 
 const program = new Command("askar-tools-javascript")
 
@@ -13,7 +14,7 @@ program
     "--strategy <strategy>",
     "Specify strategy to be used. Choose from 'mt-convert-to-mw', or 'import-tenant'.",
     (value) => {
-      if (!["mt-convert-to-mw", "import-tenant","export"].includes(value)) {
+      if (!["mt-convert-to-mw", "import-tenant","export","db-pw-export"].includes(value)) {
         throw new Error(
           "Invalid strategy. Choose from 'mt-convert-to-mw', or 'import-tenant'."
         )
@@ -57,13 +58,10 @@ const main = async () => {
 
   let method
   let exporterMethod
+  let storageType:| AskarWalletPostgresStorageConfig| AskarWalletSqliteStorageConfig
 
   switch (options.strategy) {
     case "export":
-      let storageType:
-        | AskarWalletPostgresStorageConfig
-        | AskarWalletSqliteStorageConfig
-
       if (options.storageType === "postgres") {
         storageType = {
           type: "postgres",
@@ -92,7 +90,35 @@ const main = async () => {
       })
       await exporterMethod.export()
       break
-
+    case "db-pw-export":
+        if (options.storageType === "postgres") {
+          storageType = {
+            type: "postgres",
+            config: {
+              host: options.postgresHost,
+            },
+            credentials: {
+              account: options.postgresUsername,
+              password: options.postgresPassword,
+            },
+          }
+        } else {
+          storageType = {
+            type: "sqlite",
+          }
+        }
+  
+        exporterMethod = new DBPerWalletExporter({
+          fileSystem: new agentDependencies.FileSystem(),
+          walletConfig: {
+            id: options.walletId,
+            key: options.walletKey,
+            storage: storageType,
+          },
+          tenantId: options.tenantId,
+        })
+        await exporterMethod.exportDBPerWalletData()
+        break
     case "mt-convert-to-mw":
       let storage:
         | AskarWalletPostgresStorageConfig

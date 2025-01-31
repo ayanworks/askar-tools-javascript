@@ -1,2 +1,3 @@
 node_modules
-exportedWallet.json
+sharedTenantExportedWallet.json
+DB_per_wallet_exportedWallet.json
