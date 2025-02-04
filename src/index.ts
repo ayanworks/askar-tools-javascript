@@ -8,9 +8,9 @@ import { Exporter } from "./exporter"
 
 const program = new Command("askar-tools-javascript")
 
-export enum Strategy {
-  EXPORT = 'export',
-  DB_PW_EXPORT = 'db-pw-export'
+export enum databaseScheme {
+  PROFILE_PER_WALLET = 'ProfilePerWallet',
+  DATABASE_PER_WALLET = 'DatabasePerWallet'
 }
 
 program
@@ -18,7 +18,7 @@ program
     "--strategy <strategy>",
     "Specify strategy to be used. Choose from 'mt-convert-to-mw', or 'import-tenant'.",
     (value) => {
-      if (!["mt-convert-to-mw", "import-tenant","export","db-pw-export"].includes(value)) {
+      if (!["mt-convert-to-mw", "import-tenant", "export"].includes(value)) {
         throw new Error(
           "Invalid strategy. Choose from 'mt-convert-to-mw', or 'import-tenant'."
         )
@@ -54,6 +54,19 @@ program
     "Specify password for postgres storage."
   )
   .option("--tenant-id <id>", "Specify tenant-id to be migrated.")
+  .option(
+    "--database-scheme <scheme>",
+    "Specify database scheme to be migrated. Choose from 'DatabasePerWallet' or 'ProfilePerWallet'.",
+    (value) => {
+      if (!["DatabasePerWallet", "ProfilePerWallet"].includes(value)) {
+        throw new Error(
+          "Invalid database scheme. Choose from 'DatabasePerWallet' or 'ProfilePerWallet'."
+        )
+      }
+      return value
+    },
+    "ProfilePerWallet"
+  )
 
 const main = async () => {
   const options = program.opts()
@@ -91,38 +104,10 @@ const main = async () => {
           storage: storageType,
         },
         tenantId: options.tenantId,
+        databaseScheme: options.databaseScheme,
       })
-      await exporterMethod.export(Strategy.EXPORT)
+      await exporterMethod.export()
       break
-    case "db-pw-export":
-        if (options.storageType === "postgres") {
-          storageType = {
-            type: "postgres",
-            config: {
-              host: options.postgresHost,
-            },
-            credentials: {
-              account: options.postgresUsername,
-              password: options.postgresPassword,
-            },
-          }
-        } else {
-          storageType = {
-            type: "sqlite",
-          }
-        }
-  
-        exporterMethod = new Exporter({
-          fileSystem: new agentDependencies.FileSystem(),
-          walletConfig: {
-            id: options.walletId,
-            key: options.walletKey,
-            storage: storageType,
-          },
-          tenantId: options.tenantId,
-        })
-        await exporterMethod.export(Strategy.DB_PW_EXPORT)
-        break
     case "mt-convert-to-mw":
       let storage:
         | AskarWalletPostgresStorageConfig

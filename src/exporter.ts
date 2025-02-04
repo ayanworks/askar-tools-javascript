@@ -6,7 +6,7 @@ import {
 } from "@credo-ts/askar/build/utils"
 import { writeFileSync } from "fs"
 import { join } from "path"
-import { Strategy } from "."
+import { databaseScheme } from "."
 
 /**
  * Class responsible for exporting wallet data.
@@ -16,6 +16,7 @@ export class Exporter {
   private fileSystem: FileSystem
   private profileId: string
   private tenantId: string
+  private databaseScheme: string
 
   /**
    * Constructor for the Exporter class.
@@ -27,15 +28,18 @@ export class Exporter {
     walletConfig,
     fileSystem,
     tenantId,
+    databaseScheme
   }: {
     walletConfig: WalletConfig
     fileSystem: FileSystem
     tenantId: string
+    databaseScheme: string
   }) {
     this.walletConfig = walletConfig
     this.fileSystem = fileSystem
     this.profileId = `tenant-${tenantId}`
     this.tenantId = tenantId
+    this.databaseScheme = databaseScheme
   }
 
   /**
@@ -50,12 +54,12 @@ export class Exporter {
         passKey: askarWalletConfig.passKey,
       })
       console.log("🚀 Store opened:", store)
-      if (strategy === Strategy.EXPORT) {
+      if (this.databaseScheme === databaseScheme.PROFILE_PER_WALLET) {
         await this.getDecodedItemsAndTags(store);
-      } else if (strategy === Strategy.DB_PW_EXPORT) {
+      } else if (this.databaseScheme === databaseScheme.DATABASE_PER_WALLET) {
         await this.processStoreData(store, askarWalletConfig);
       } else {
-        console.warn(`Unknown strategy: ${strategy}`);
+        console.warn(`Unknown strategy`);
       }
     } catch (error) {
       console.error("🚀 ~ Exporter ~ export ~ error:", error)
