@@ -8,11 +8,6 @@ import { Exporter } from "./exporter"
 
 const program = new Command("askar-tools-javascript")
 
-export enum databaseScheme {
-  PROFILE_PER_WALLET = 'ProfilePerWallet',
-  DATABASE_PER_WALLET = 'DatabasePerWallet'
-}
-
 program
   .requiredOption(
     "--strategy <strategy>",

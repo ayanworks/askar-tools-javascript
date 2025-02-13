@@ -6,7 +6,7 @@ import {
 } from "@credo-ts/askar/build/utils"
 import { writeFileSync } from "fs"
 import { join } from "path"
-import { databaseScheme } from "."
+import { AskarMultiWalletDatabaseScheme } from "@credo-ts/askar"
 
 /**
  * Class responsible for exporting wallet data.
@@ -54,9 +54,9 @@ export class Exporter {
         passKey: askarWalletConfig.passKey,
       })
       console.log("🚀 Store opened:", store)
-      if (this.databaseScheme === databaseScheme.PROFILE_PER_WALLET) {
+      if (this.databaseScheme === AskarMultiWalletDatabaseScheme.ProfilePerWallet) {
         await this.getDecodedItemsAndTags(store);
-      } else if (this.databaseScheme === databaseScheme.DATABASE_PER_WALLET) {
+      } else if (this.databaseScheme === AskarMultiWalletDatabaseScheme.DatabasePerWallet) {
         await this.processStoreData(store, askarWalletConfig);
       } else {
         console.warn(`Unknown strategy`);
@@ -116,7 +116,7 @@ export class Exporter {
         passKey: walletKey,
       });
   
-      const tenantData = await this.scanStore(tenantStore);
+      const tenantData = await this.fetchDataFromStore(tenantStore);
       this.processTenantData(tenantData);
     }
   
@@ -141,11 +141,6 @@ export class Exporter {
         walletId: value.config.walletConfig.id,
         walletKey: value.config.walletConfig.key,
       };
-    }
-  
-    private async scanStore(store: any) {
-      const scan = store.scan({});
-      return await scan.fetchAll();
     }
   
     private processTenantData(data): void {
